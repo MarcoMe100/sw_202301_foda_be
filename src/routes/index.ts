@@ -1,6 +1,7 @@
 import express from 'express';
 const router  = express.Router();
 
+
 router.get('/', (_req, res) => {
   res.json({msg:'Hello World!'});
  });
@@ -10,5 +11,8 @@ router.get('/', (_req, res) => {
   const jsonResp= {"name":"FODA Be","version": version};
   res.json(jsonResp);
  });
+
+ import empresasRouter from './empresas/Empresas';
+ router.use('/empresas',empresasRouter);
 
 export default router;
