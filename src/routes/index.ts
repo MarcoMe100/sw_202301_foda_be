@@ -12,7 +12,7 @@ router.get('/', (_req, res) => {
   res.json(jsonResp);
  });
 
- import empresasRouter from './empresas/Empresas';
+ import empresasRouter from './empresas/empresas';
  router.use('/empresas',empresasRouter);
 
 export default router;
