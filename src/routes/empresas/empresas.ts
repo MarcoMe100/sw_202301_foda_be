@@ -28,6 +28,16 @@ router.get('/all', (_req, res) =>{
     res.status(200).json(empresasModel.getAll());
 
 });
+
+router.get('/byid/:id', (req, res)=>{
+    const { id: codigo} = req.params;
+    const empresa = empresasModel.getById(codigo);
+    if(empresa){
+        return res.status(200).json(empresa);
+    }
+    return res.status(404).json({"error":"no se encontro la empresa"});
+})
+
 router.post('/new', (req, res) => {
     const{nombre ="John Doe Corp", status = "Activo"} = req.body;
     const newEmpresas: IEmpresas = {
@@ -43,7 +53,7 @@ router.post('/new', (req, res) => {
 });
 
 
-router.put('/upd:id', (req, res)=>{
+router.put('/upd/:id', (req, res)=>{
   const { id } =req.params;
   const { nombre="John Doe Corp", status="Activo", observacion=""} =req.body;
 
@@ -59,6 +69,14 @@ if (empresasModel.update(updateEmpresas)){
 
 }
 return res.status(404).json({"error": "Error al actualizar"})
+});
+
+router.delete('/del/:id', (req, res)=>{
+      const { id: codigo } = req.params;
+      if(empresasModel.delete(codigo)) {
+        return res.status(200).json({"deleted": true});
+      }
+      return res.status(404).json({"error":"no se puede eliminar"});
 });
 
 export default router;
