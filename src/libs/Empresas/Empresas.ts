@@ -1,5 +1,3 @@
-
-
 export interface IEmpresas{
     codigo: string;
     nombre: string;
@@ -12,8 +10,6 @@ export interface IEmpresas{
 
 
 export class Empresas {
-
-    
  
  private empresas : IEmpresas[];
  constructor(){
@@ -47,14 +43,16 @@ export class Empresas {
  }
 
  update(updateEmpresas: IEmpresas){
+    let updated = false;
     const newEmpresas: IEmpresas[] =this.empresas.map((emp)=>{
         if (emp.codigo === updateEmpresas.codigo) {
+            updated = true;
             return {...emp, ...updateEmpresas,update: new Date()};
         }
         return emp;
     });
     this.empresas = newEmpresas;
-    return true;
+    return updated;
  }
  delete(codigo: string){
     const empresaToDelete = this.empresas.find((emp)=>{

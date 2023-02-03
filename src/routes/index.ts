@@ -15,4 +15,7 @@ router.get('/', (_req, res) => {
  import empresasRouter from './empresas/empresas';
  router.use('/empresas',empresasRouter);
 
+ import usuarioRouter from './empresas/usuarios';
+ router.use('/usuarios',usuarioRouter);
+
 export default router;
