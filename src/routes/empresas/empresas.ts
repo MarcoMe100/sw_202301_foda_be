@@ -1,82 +1,109 @@
 import express from 'express';
 const router = express.Router();
-
-
-import { Empresas , IEmpresas } from '@libs/Empresas/Empresas';
-const empresasModel =new Empresas();
-
-empresasModel.add({
-    codigo: '',
-    nombre: 'Mi empresa',
-    status: 'Activo'
-});
-//registrar los edpoint en router
-
-router.get('/',(_req, res)=>{
-    const jsonUrls = {
-        "getAll":{"method":"get", "url":"empresas/all"},
-        "getById":{"method":"get", "url":"empresas/byid/:id"},
-        "new":{"method":"post", "url":"empresas/new"},
-        "update":{"method":"put", "url":"empresas/upd/:id"},
-        "delete":{"method":"delete", "url":"empresas/del/:id"},
-
-    };
-    res.status(200).json(jsonUrls);
+import { EmpresasDao } from '@dao/models/Empresas/EmpresasDao';
+import { MongoDBConn } from '@dao/MongoDBConn';
+import { IEmpresa } from '@dao/models/Empresas/IEmpresas';
+import { Empresas } from '@libs/Empresas/Empresas';
+const empresasDao = new EmpresasDao(MongoDBConn);
+let empresasModel:Empresas;
+empresasDao.init().then(()=>{
+  empresasModel = new Empresas(empresasDao);
 });
 
-router.get('/all', (_req, res) =>{
-    res.status(200).json(empresasModel.getAll());
-
+//registrar los endpoint en router
+//http://localhost:3001/empresas
+router.get('/', (_req, res)=>{
+  const jsonUrls = {
+    "getAll": {"method":"get", "url": "empresas/all"},
+    "getById": {"method":"get", "url": "empresas/byid/:id"},
+    "new": {"method":"post", "url": "empresas/new"},
+    "update": {"method":"put", "url": "empresas/upd/:id"},
+    "delete": {"method":"delete", "url": "empresas/del/:id"},
+  };
+  res.status(200).json(jsonUrls);
 });
 
-router.get('/byid/:id', (req, res)=>{
-    const { id: codigo} = req.params;
-    const empresa = empresasModel.getById(codigo);
-    if(empresa){
-        return res.status(200).json(empresa);
-    }
-    return res.status(404).json({"error":"no se encontro la empresa"});
-})
+router.get('/all', async (_req, res) => {
+  res.status(200).json(await empresasModel.getAll());
+});
 
-router.post('/new', (req, res) => {
-    const{nombre ="John Doe Corp", status = "Activo"} = req.body;
-    const newEmpresas: IEmpresas = {
-    codigo : "",
+router.get('/byid/:id', async (req, res)=>{
+  const {id: codigo} = req.params;
+  const empresa = await empresasModel.getById(codigo);
+  if(empresa){
+    return res.status(200).json(empresa);
+  }
+  return res.status(404).json({"error":"No se encontró Empresa"});
+});
+
+router.post('/new', async (req, res) => {
+  console.log("Empresas /new request body:", req.body);
+  const {
+    codigo = "NA",
+    nombre ="John Doe Corp",
+    status = "Activo"
+  } = req.body;
+  //TODO: Validar Entrada de datos
+  const newEmpresa: IEmpresa = {
+    codigo,
     nombre,
     status
-
-    };
-    if (empresasModel.add(newEmpresas)){
-        res.status(200).json({"created": true});
-    }
-    return res.status(404).json({"error": "error al agregar una nueva empresa"});
+  };
+  if (await empresasModel.add(newEmpresa)) {
+    return res.status(200).json({"created": true});
+  }
+  return res.status(404).json(
+    {"error": "Error al agregar una nueva Empresa"}
+  );
 });
 
+router.put('/upd/:id', async (req, res) => {
+  const { id } = req.params;
+  const {
+    nombre="----NotRecieved------",
+    status="----NotRecieved------",
+    observacion = "",
+    codigo = "",
+  } = req.body;
 
-router.put('/upd/:id', (req, res)=>{
-  const { id } =req.params;
-  const { nombre="John Doe Corp", status="Activo", observacion=""} =req.body;
-
-  const updateEmpresas : IEmpresas = {
-    codigo : id,
+  if (
+    nombre === "----NotRecieved------"
+    || status === "----NotRecieved------"
+  ) {
+    return res.status(403).json({"error":"Debe venir el nombre y status correctos"});
+  }
+  const UpdateEmpresa : IEmpresa = {
+    codigo,
     nombre,
     status,
     observacion
+  };
+
+  if (await empresasModel.update(id, UpdateEmpresa)) {
+    return res
+      .status(200)
+      .json({"updated": true});
   }
-
-if (empresasModel.update(updateEmpresas)){
-    return res.status(200).json({"updated": true});
-
-}
-return res.status(404).json({"error": "Error al actualizar"})
-});
-
-router.delete('/del/:id', (req, res)=>{
-      const { id: codigo } = req.params;
-      if(empresasModel.delete(codigo)) {
-        return res.status(200).json({"deleted": true});
+  return res
+    .status(404)
+    .json(
+      {
+        "error": "Error al actualizar Empresa"
       }
-      return res.status(404).json({"error":"no se puede eliminar"});
+    );
 });
+
+router.delete('/del/:id', async (req, res)=>{
+  const {id } = req.params;
+  if(await empresasModel.delete(id)){
+    return res.status(200).json({"deleted": true});
+  }
+  return res.status(404).json({"error":"No se pudo eliminar Empresa"});
+});
+/*
+router.get('/', function(_req, res){
+
+});
+ */
 
 export default router;
